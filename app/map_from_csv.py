@@ -11,14 +11,20 @@ from marshmallow import ValidationError
 import argparse
 import time
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(levelname)s %(message)s')
 
 parser = argparse.ArgumentParser(description='Import CSVs from MRB MySQL')
-parser.add_argument('--study', dest='study', required=True, help='Path to study_e.csv')
-parser.add_argument('--groups', dest='groups', required=True, help='Path to groups.csv')
-parser.add_argument('--permissions_e', dest='permissions_e', required=True, help='Path to permissions_e.csv')
-parser.add_argument('--memberships', dest='memberships', required=True, help='Path to memberships.csv')
-parser.add_argument('--batches', dest='batches', required=False, help='Path to batches.csv')
+parser.add_argument('--study', dest='study', required=True,
+                    help='Path to study_e.csv')
+parser.add_argument('--groups', dest='groups',
+                    required=True, help='Path to groups.csv')
+parser.add_argument('--permissions_e', dest='permissions_e',
+                    required=True, help='Path to permissions_e.csv')
+parser.add_argument('--memberships', dest='memberships',
+                    required=True, help='Path to memberships.csv')
+parser.add_argument('--batches', dest='batches',
+                    required=False, help='Path to batches.csv')
 args = parser.parse_args()
 
 
@@ -43,9 +49,9 @@ def batch_add_rel(records):
 
 def map_population(pop):
     if pop in ["Aboriginal Australian", "African American or Afro-Caribbean", "African unspecified", "Asian unspecified",
-                "Central Asian", "East Asian", "European", "Greater Middle Eastern (Middle Eastern, North African, or Persian)",
-                    "Hispanic or Latin American", "Native American", "Not reported", "Oceanian", "Other", "Other admixed ancestry",
-                        "South Asian", "South East Asian", "Sub-Saharan African", "Mixed", "NA"]:
+               "Central Asian", "East Asian", "European", "Greater Middle Eastern (Middle Eastern, North African, or Persian)",
+               "Hispanic or Latin American", "Native American", "Not reported", "Oceanian", "Other", "Other admixed ancestry",
+               "South Asian", "South East Asian", "Sub-Saharan African", "Mixed", "NA"]:
         return pop
     if pop.lower() == "african american":
         return "African American or Afro-Caribbean"
@@ -86,6 +92,7 @@ def map_population(pop):
     else:
         raise ValueError("Unknown pop :{}".format(pop))
 
+
 # populate_db to neo4
 app = flask.Flask(__name__)
 app.teardown_appcontext(Neo4j.close_db)
@@ -101,14 +108,14 @@ with app.app_context():
     gid_to_name = dict()
     email_to_gid = dict()
 
-    i=0
+    i = 0
     # populate_db gwas info
     with open(args.study) as f:
         # skip first row which are NULL
         # f.readline()
 
         for line in f:
-            i+=1
+            i += 1
             print(str(i))
             fields = line.strip().split("\t")
             print(fields)
@@ -119,13 +126,13 @@ with app.app_context():
             try:
                 d['pmid'] = int(fields[1])
             except ValueError as e:
-                logging.warning(e)
+                logging.debug(e)
 
             try:
                 if int(fields[2]) > 0:
                     d['year'] = int(fields[2])
             except ValueError as e:
-                logging.warning(e)
+                logging.debug(e)
 
             d['mr'] = int(fields[5])
 
@@ -163,22 +170,22 @@ with app.app_context():
             try:
                 d['ncase'] = int(fields[12])
             except ValueError as e:
-                logging.warning(e)
+                logging.debug(e)
 
             try:
                 d['ncontrol'] = int(fields[13])
             except ValueError as e:
-                logging.warning(e)
+                logging.debug(e)
 
             try:
                 d['sample_size'] = int(fields[14])
             except ValueError as e:
-                logging.warning(e)
-                
+                logging.debug(e)
+
             try:
                 d['nsnp'] = int(fields[15])
             except ValueError as e:
-                logging.warning(e)
+                logging.debug(e)
 
             if fields[16] != "NULL":
                 d['unit'] = str(fields[16])
@@ -187,7 +194,7 @@ with app.app_context():
                 if fields[17] is not None:
                     d['sd'] = float(fields[17])
             except ValueError as e:
-                logging.warning(e)
+                logging.debug(e)
 
             try:
                 d['priority'] = int(fields[18])
@@ -201,10 +208,10 @@ with app.app_context():
                 d['consortium'] = str(fields[20])
 
             if fields[21] != "NULL":
-               d['group_name'] = str(fields[21])
+                d['group_name'] = str(fields[21])
 
             if fields[22] != "NULL":
-               d['ontology'] = str(fields[22])
+                d['ontology'] = str(fields[22])
 
             # if fields[23] != "NULL":
             #    d['study_design'] = str(fields[23])
@@ -213,7 +220,7 @@ with app.app_context():
             #    d['coverage'] = str(fields[24])
 
             if fields[25] != "NULL":
-               d['build'] = str(fields[25])
+                d['build'] = str(fields[25])
 
             if d['category'] == "Cytokines":
                 d['category'] = "Immune system"
@@ -234,7 +241,8 @@ with app.app_context():
             try:
                 d = schema.load(d)
             except ValidationError as e:
-                logging.error("Could not populate_db {} because {}".format(line, e))
+                logging.error(
+                    "Could not populate_db {} because {}".format(line, e))
                 continue
 
             # append to populate_db queue
@@ -258,7 +266,6 @@ with app.app_context():
             # gid = name
             gid_to_name[int(fields[0])] = fields[1]
 
-
     # populate_db batches
     if args.batches is not None:
         logging.info("importing batches")
@@ -267,11 +274,11 @@ with app.app_context():
         with open(args.batches) as f:
             for line in f:
                 fields = line.strip().split("\t")
-                d = {"id": fields[0], "description": fields[1], "link":  fields[2], "count": fields[3]}
+                d = {"id": fields[0], "description": fields[1],
+                     "link":  fields[2], "count": fields[3]}
                 batches.append(d)
 
         batch_add_nodes(batches, "Batches")
-
 
     # populate_db users
     logging.info("importing users")
@@ -326,7 +333,8 @@ with app.app_context():
     groups = set()
     for it in gid_to_name:
         groups.add(gid_to_name[it])
-    add_new_user('opengwas-ci-cd@mr-base.iam.gserviceaccount.com', 'OpenGWAS', 'CI CD', groups, admin=True)
+    add_new_user('opengwas-ci-cd@mr-base.iam.gserviceaccount.com',
+                 'OpenGWAS', 'CI CD', groups, admin=True)
 
     # set all gwas as QC passed
     tx = Neo4j.get_db()
