@@ -116,9 +116,9 @@ with app.app_context():
 
         for line in f:
             i += 1
-            print(str(i))
+            logging.info(str(i))
             fields = line.strip().split("\t")
-            print(fields)
+            logging.info(fields)
             d = dict()
 
             d['id'] = str(fields[0]).replace(":", "-")
@@ -262,7 +262,7 @@ with app.app_context():
             fields = line.strip().split("\t")
             g = Group(name=str(fields[1]))
             g.create_node()
-            print(line)
+            logging.info(line)
             # gid = name
             gid_to_name[int(fields[0])] = fields[1]
 
