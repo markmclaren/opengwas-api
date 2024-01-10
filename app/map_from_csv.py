@@ -11,7 +11,7 @@ from marshmallow import ValidationError
 import argparse
 import time
 
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.ERROR,
                     format='%(asctime)s %(levelname)s %(message)s')
 
 parser = argparse.ArgumentParser(description='Import CSVs from MRB MySQL')
@@ -126,13 +126,13 @@ with app.app_context():
             try:
                 d['pmid'] = int(fields[1])
             except ValueError as e:
-                logging.debug(e)
+                logging.warning(e)
 
             try:
                 if int(fields[2]) > 0:
                     d['year'] = int(fields[2])
             except ValueError as e:
-                logging.debug(e)
+                logging.warning(e)
 
             d['mr'] = int(fields[5])
 
@@ -170,22 +170,22 @@ with app.app_context():
             try:
                 d['ncase'] = int(fields[12])
             except ValueError as e:
-                logging.debug(e)
+                logging.warning(e)
 
             try:
                 d['ncontrol'] = int(fields[13])
             except ValueError as e:
-                logging.debug(e)
+                logging.warning(e)
 
             try:
                 d['sample_size'] = int(fields[14])
             except ValueError as e:
-                logging.debug(e)
+                logging.warning(e)
 
             try:
                 d['nsnp'] = int(fields[15])
             except ValueError as e:
-                logging.debug(e)
+                logging.warning(e)
 
             if fields[16] != "NULL":
                 d['unit'] = str(fields[16])
@@ -194,7 +194,7 @@ with app.app_context():
                 if fields[17] is not None:
                     d['sd'] = float(fields[17])
             except ValueError as e:
-                logging.debug(e)
+                logging.warning(e)
 
             try:
                 d['priority'] = int(fields[18])
